@@ -32,11 +32,12 @@ if (file_name ==NULL){
     exit(EXIT_FAILURE);
 }
 
-while(!feof(file_name)){
-    fscanf(file_name,"%s",buffer);
+while(fscanf(file_name,"%s",buffer)!=EOF){
+     
     if (count%3==0){
         int res_dir = mkdir((const char*)buffer,0777);
     }
+    count++;
     printf("%s\n", buffer);
 
 }
