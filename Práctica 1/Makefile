@@ -32,3 +32,6 @@ solution:
 
 clean : 
 	rm -rf *~ core $(DIROBJ) $(DIREXE) $(DIRHEA)*~ $(DIRSRC)*~
+	rm -rf 0*
+	rm -rf 55*
+	rm -rf 75*

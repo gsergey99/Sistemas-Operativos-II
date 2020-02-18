@@ -10,19 +10,19 @@
 #include <ctype.h>
 #include <fcntl.h>
 
+#define NUM_BUFFER 4096
+#define PERMISOS 0644
 
 
-
-void copy_file(char *source, char *destiny);
+void copy_file(char *src, char *dest);
 
 
 int main(int argc, char *argv[]){
 
 FILE* file_name;
-char buffer[255];
-int count = 3;
-char model;
-char *DNI;
+char buffer[NUM_BUFFER];
+char directory[NUM_BUFFER];
+char *dest_directory;
 
 file_name = fopen(argv[1],"rb");
 if (file_name ==NULL){
@@ -32,40 +32,43 @@ if (file_name ==NULL){
 }
 
 while(fscanf(file_name,"%s",buffer)!=EOF){
-    
+        if(strlen(buffer)==8){
+            strcpy(directory,buffer);
+
+        }else{
+
         if(strcmp(buffer,"A")==0){
-            copy_file("MODELOSEXAMEN/MODELOA.pdf","HOLA/MODELOA.pdf");
+            dest_directory= strcat(directory,"/A.pdf");
+            copy_file("modelos/A.pdf",dest_directory);
         }else if (strcmp(buffer,"B")==0)
         {
-            printf("Soy B");
-
-            //copy_file("/MODELOSEXAMEN/MODELOB.pdf","HOLA");
+            dest_directory= strcat(directory,"/B.pdf");
+            copy_file("modelos/B.pdf",dest_directory);
 
         }else if (strcmp(buffer,"C")==0){    
-                
-            printf("Soy C");
+            
+            dest_directory= strcat(directory,"/C.pdf");
+            copy_file("modelos/C.pdf",dest_directory);               
 
-            //copy_file("/MODELOSEXAMEN/MODELOC.pdf","HOLA")
-   
         }
-            printf("%s\n", buffer);
+
+    }
 }
 fclose(file_name);
 return EXIT_SUCCESS;
-
 
 }
 
 void copy_file(char *src, char *dest){
     int src_fd, dst_fd, n, err;
-    unsigned char buffer[4096];
-    char * src_path, dst_path;
+    unsigned char buffer[NUM_BUFFER];
+
 
     src_fd = open(src, O_RDONLY);
-    dst_fd = open(dest, O_CREAT | O_WRONLY);
+    dst_fd = open(dest, O_CREAT | O_WRONLY,PERMISOS);
 
     while (1) {
-        err = read(src_fd, buffer, 4096);
+        err = read(src_fd, buffer, NUM_BUFFER);
         if (err == -1) {
             printf("Error reading file.\n");
             exit(1);
@@ -84,6 +87,7 @@ void copy_file(char *src, char *dest){
     close(src_fd);
     close(dst_fd);
 }
+
 
 
 

@@ -16,7 +16,7 @@ FILE* file_name;
 char buffer[255];
 int count = 3;
 
-file_name = fopen(argv[0],"rb");
+file_name = fopen(argv[1],"rb");
 if (file_name ==NULL){
 
     fprintf(stderr,"El archvo no existe \n");
