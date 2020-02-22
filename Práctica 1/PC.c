@@ -1,4 +1,4 @@
-//Librerías necesarias 
+//Librerías necesarias para PC
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -15,31 +15,41 @@
 
 void write_file_mark(char *dst, int mark);
 int calculate_mark(int first_mark);
+void calculate_media(int media[],int count);
 
 int main(int argc, char *argv[]){
 
-FILE* file_name;
-char buffer[NUM_BUFFER], directory[NUM_BUFFER];
-file_name = fopen(argv[1],"rb");
-int first_mark, second_mark;
+    FILE* file_name;
+    char buffer[NUM_BUFFER], directory[NUM_BUFFER];
+    file_name = fopen(argv[1],"rb");
+    int first_mark, second_mark, count;
+    int media[25];
+    count =0;
+    int *out;
+    out=(int *) malloc(sizeof(int) * 25);
 
-if(file_name == NULL){
-    fprintf(stderr,"Error en la apertura del archivo");
-    exit(EXIT_FAILURE);
-}
 
-while(fscanf(file_name,"%s",buffer)!=EOF){
-    if(strlen(buffer)==8){
-        strcpy(directory,buffer);
+    if(file_name == NULL){
+        fprintf(stderr,"Error en la apertura del archivo %s",argv[1]);
+        exit(EXIT_FAILURE);
+    }
 
-    }else if (strlen(buffer)==1 && isdigit(buffer[0])){
-        first_mark = atoi(buffer);
-        second_mark = calculate_mark(first_mark);
-        write_file_mark(directory,second_mark);
-    } 
-}
-fclose(file_name);
-return EXIT_SUCCESS;
+    while(fscanf(file_name,"%s",buffer)!=EOF){
+        if(strlen(buffer)==8){
+            strcpy(directory,buffer);
+
+        }else if (strlen(buffer)<=2 && (isdigit(buffer[0]) || isdigit(buffer[1]))){
+            first_mark = atoi(buffer);
+            second_mark = calculate_mark(first_mark);
+            write_file_mark(directory,second_mark);
+            out[count] = first_mark;
+            count++;
+
+        } 
+    }
+    calculate_media(out,count);
+    fclose(file_name);
+    return EXIT_SUCCESS;
 }
 
 void write_file_mark(char *dst, int mark){
@@ -48,7 +58,7 @@ void write_file_mark(char *dst, int mark){
     char *dest_directory;
     char *text = "La nota que debes obtener en este nuevo examen para superar la prueba es ";
     dest_directory = strcat(dst,"/aviso.txt");
-    dest = fopen(dest_directory,"w");
+    dest = fopen(dest_directory,"wb");
     if(dest == NULL){
         fprintf(stderr,"Error en la apertura del archivo");
         exit(EXIT_FAILURE);
@@ -60,7 +70,18 @@ void write_file_mark(char *dst, int mark){
 
 
 int calculate_mark (int first_mark){
+    return 10 - first_mark;
+}
 
-    return 10-first_mark;
+void calculate_media(int value[], int count){
+    int media =0;
+    int i;
+    for (i = 0; i < 25; i++)
+    {
+        media+=value[i];
+    }
+
+    printf("La media de la clase es: %ld\n",media/count);
+    free(value);
 
 }
