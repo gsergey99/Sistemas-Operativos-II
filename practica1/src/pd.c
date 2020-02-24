@@ -1,4 +1,3 @@
-//Librerías necesarias para PD
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -23,10 +22,6 @@ int main(int argc, char *argv[]){
     remove_files(dir,"files","aviso.txt");
     remove_files(dir,"directory","directory");
 
-
-
-    
-    
     return EXIT_SUCCESS;       
 }
 
@@ -48,7 +43,6 @@ void remove_files(const char *dir, char *mode, char *files){
                 fprintf(stderr,"Nombre %s/%s demasiado largo\n",dir,node->d_name);
                 exit(EXIT_FAILURE);
             }
-            //printf("%s\n",node->d_name);
 
             sprintf(name, "%s/%s",dir,node->d_name);
             if(strcmp(node->d_name,".") && strcmp(node->d_name,"..")){

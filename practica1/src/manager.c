@@ -8,10 +8,10 @@
 #include <sys/wait.h>
 
 int main(int argc, char *argv[]){
-    pid_t pid;
-    pid = fork();
-    int state;
-    switch (pid)
+    pid_t pid_pa;
+    pid_pa = fork();
+    int status;
+    switch (pid_pa)
         {
         case -1:
             printf("No se ha podido crear el proceso hijo \n");
@@ -20,11 +20,16 @@ int main(int argc, char *argv[]){
             printf("Proceso hijo creado\n");
             execl("./PA",argv[1],NULL);
             exit(EXIT_SUCCESS);
-        default:
-            wait(&state);
-            printf("Proceso hijo finalizado\n");
-            break;
         }
+
+    waitpid(pid_pa,&status,0);
+    if (status == EXIT_FAILURE){
+        fprintf(stderr,"Error en la la espera de PA, eliminación de archivos");
+        
+    }
+
+
+
     
 }
 
