@@ -31,8 +31,8 @@ pd: $(DIROBJ)pd.o
 $(DIROBJ)%.o: $(DIRSRC)%.c
 	$(CC) $(CFLAGS) $^ -o $@
 
-test:
-	./$(DIREXE)manager 3 2 5
+run:
+	./$(DIREXE)manager 
 
 solution:
 	./$(DIREXE)manager 2 3 4
@@ -42,3 +42,4 @@ clean :
 	rm -rf 0*
 	rm -rf 55*
 	rm -rf 75*
+	rm src/log.txt

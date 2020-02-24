@@ -23,9 +23,9 @@ int main(int argc, char *argv[]){
     FILE* file_name;
     char buffer[NUM_BUFFER];
     char directory[NUM_BUFFER];
-    char *dest_directory;
+    char *dest_directory,*src_directory;
 
-    file_name = fopen(argv[1],"rb");
+    file_name = fopen(argv[0],"rb");
     if (file_name ==NULL){
 
         fprintf(stderr,"Error en la apertura del archivo %s\n",argv[1]);
@@ -36,24 +36,28 @@ int main(int argc, char *argv[]){
             if(strlen(buffer)==8){
                 strcpy(directory,buffer);
 
-            }else{
-
-            if(strcmp(buffer,"A")==0){
-                dest_directory= strcat(directory,PATH_A);
-                copy_file("modelos/A.pdf",dest_directory);
-            }else if (strcmp(buffer,"B")==0)
-            {
-                dest_directory= strcat(directory,PATH_B);
-                copy_file("modelos/B.pdf",dest_directory);
-
-            }else if (strcmp(buffer,"C")==0){    
-                
-                dest_directory= strcat(directory,PATH_C);
-                copy_file("modelos/C.pdf",dest_directory);               
-
             }
+            else{
+                
+                if(strcmp(buffer,"A")==0){
+                    
+                    dest_directory= strcat(directory,PATH_A);
+                    copy_file("modelos/A.pdf",dest_directory);
+                
+                }else if (strcmp(buffer,"B")==0)
+                {
+                    dest_directory= strcat(directory,PATH_B);
+                    copy_file("modelos/B.pdf",dest_directory);
+
+                }else if (strcmp(buffer,"C")==0){    
+
+                    dest_directory= strcat(directory,PATH_C);
+                    copy_file("modelos/C.pdf",dest_directory);
+                }
 
         }
+        printf("Se ha copiado correctamente %s\n",dest_directory);
+
     }
     fclose(file_name);
     return EXIT_SUCCESS;

@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
 
     FILE* file_name;
     char buffer[NUM_BUFFER], directory[NUM_BUFFER];
-    file_name = fopen(argv[1],"rb");
+    file_name = fopen(argv[0],"rb");
     int first_mark, second_mark, count;
     int media[25];
     count =0;
@@ -80,7 +80,7 @@ void calculate_media(int value[], int count){
         media+=value[i];
     }
 
-    printf("La media de la clase es: %ld\n",media/count);
+    printf("%ld\n",media/count);
     free(value);
 
 }

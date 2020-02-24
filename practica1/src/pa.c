@@ -11,7 +11,7 @@
 
 #define NUM_BUFFER 4096
 #define PERMISOS 0777
-#define PATH ".."
+#define PATH "../practica1"
 
 int main(int argc, char *argv[]){
 
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
     char buffer[NUM_BUFFER];
     char *directory;
 
-    file_name = fopen(argv[1],"rb");
+    file_name = fopen(argv[0],"rb");
     if (file_name ==NULL){
 
         fprintf(stderr,"Error en la apertura del archivo %s\n",argv[1]);
@@ -30,13 +30,11 @@ int main(int argc, char *argv[]){
         
         if (strlen(buffer)==8){
             sprintf(directory,"%s/%s",PATH,buffer);
-            printf("%s\n",directory);
             int res_dir = mkdir(directory,PERMISOS);
         }
 
     }
     fclose(file_name);
-    printf("Creación de directorios finalizada.\n");
     return EXIT_SUCCESS;
 
 }
