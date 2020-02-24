@@ -11,6 +11,13 @@
 #define LOG "src/log.txt"
 #define LOG_TEXT1 "******** Log del sistema ********\n"
 #define LOG_TEXT2 "Creación de directorios finalizada.\n"
+#define LOG_TEXT3 "Copia de modelos de examen, finalizada.\n"
+#define LOG_TEXT4 "Creación de archivos con nota necesaria para alcanzar la nota de corte, finalizada. \n"
+
+pid_t general_pids[3];
+
+void manejador(int);
+
 
 int main(int argc, char *argv[]){
     char media[2]={0};
@@ -25,6 +32,7 @@ int main(int argc, char *argv[]){
     pid_pa = fork();
     int status,i, tuberia[2];
     pipe(tuberia);
+    signal(SIGINT,manejador);
     
     switch (pid_pa)
         {
@@ -32,6 +40,7 @@ int main(int argc, char *argv[]){
             printf("[MANAGER] No se ha podido crear el proceso A \n");
             exit(EXIT_FAILURE);
         case 0:
+            general_pids[0] = pid_pa;
             printf("[MANAGER] Proceso A creado\n");
             if(execl("./exec/pa",FICHERO,NULL)==-1){
                 fprintf(stderr,"[MANAGER] Error en el execl()\n");
@@ -62,14 +71,14 @@ int main(int argc, char *argv[]){
         
         case 0:
             if(i == 0){
-                
+                general_pids[1] = pids[i];
                 printf("[MANAGER] Proceso B creado\n");
                 if(execl("./exec/pb",FICHERO,NULL)==-1){
                     fprintf(stderr,"[MANAGER] Error en el execl()\n");
                     exit(EXIT_FAILURE);
                 }  
             }else if(i==1){
-                
+                general_pids[2] = pids[i];
                 printf("[MANAGER] Proceso C creado\n");
                 dup2(tuberia[1],STDOUT_FILENO);
                 if(execl("./exec/pc",FICHERO,NULL)==-1){
@@ -87,24 +96,28 @@ int main(int argc, char *argv[]){
         pid_t wait_pid = wait(&status);
         if(wait_pid == pids[0]){
             printf("[MANAGER] Esperando al proceso B\n");
-            fprintf(fd_log,"%s","Copia de modelos de examen, finalizada.\n");
+            fprintf(fd_log,"%s",LOG_TEXT3);
 
         }else{
             printf("[MANAGER] Esperando al proceso C \n");
-            fprintf(fd_log,"%s","Creación de archivos con nota necesaria para alcanzar la nota de corte, finalizada. \n");
+            fprintf(fd_log,"%s",LOG_TEXT4);
 
 
         }
     }
     read(tuberia[0],media,sizeof(media));
-    fprintf(fd_log,"La nota media de la clase es: %s.\n", media);
-    fprintf(fd_log,"FIN DE PROGRAMA\.n");
+    fprintf(fd_log,"La nota media de la clase es: %s.\n FIN DEL PROGRAMA. \n", media);
     fclose(fd_log);
     return EXIT_SUCCESS; 
-
-
-
-
+    
+}
+void manejador(int signal){
+    int i;
+    for ( i = 0; i < 3; i++)
+    {
+        kill(general_pids[i],SIGKILL);
+    }
+    printf("[MANAGER] Todos los procesos están mueertos .\n");
     
 }
 

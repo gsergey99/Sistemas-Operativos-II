@@ -11,14 +11,14 @@
 
 #define NUM_BUFFER 4096
 #define PERMISOS 0777
-#define PATH "../practica1"
+#define PATH "../practica1/Estudiantes"
 
 int main(int argc, char *argv[]){
 
     FILE* file_name;
     char buffer[NUM_BUFFER];
-    char *directory;
-
+    char directory[NUM_BUFFER];
+    int p_dir =mkdir(PATH,PERMISOS);
     file_name = fopen(argv[0],"rb");
     if (file_name ==NULL){
 
@@ -31,6 +31,7 @@ int main(int argc, char *argv[]){
         if (strlen(buffer)==8){
             sprintf(directory,"%s/%s",PATH,buffer);
             int res_dir = mkdir(directory,PERMISOS);
+            printf("%s \n",directory);
         }
 
     }

@@ -11,6 +11,7 @@
 
 #define NUM_BUFFER 4096
 #define PERMISOS 0644
+#define PATH "../practica1/Estudiantes"
 
 void write_file_mark(char *dst, int mark);
 int calculate_mark(int first_mark);
@@ -19,7 +20,7 @@ void calculate_media(int media[],int count);
 int main(int argc, char *argv[]){
 
     FILE* file_name;
-    char buffer[NUM_BUFFER], directory[NUM_BUFFER];
+    char buffer[NUM_BUFFER], directory[NUM_BUFFER],src_directory[NUM_BUFFER];
     file_name = fopen(argv[0],"rb");
     int first_mark, second_mark, count;
     int media[25];
@@ -40,14 +41,15 @@ int main(int argc, char *argv[]){
         }else if (strlen(buffer)<=2 && (isdigit(buffer[0]) || isdigit(buffer[1]))){
             first_mark = atoi(buffer);
             second_mark = calculate_mark(first_mark);
-            write_file_mark(directory,second_mark);
+            sprintf(src_directory,"%s/%s",PATH,directory);
+            write_file_mark(src_directory,second_mark);
             out[count] = first_mark;
             count++;
 
         } 
     }
-    calculate_media(out,count);
     fclose(file_name);
+    calculate_media(out,count);
     return EXIT_SUCCESS;
 }
 
@@ -80,7 +82,7 @@ void calculate_media(int value[], int count){
         media+=value[i];
     }
 
-    printf("%ld\n",media/count);
+    printf("%d\n",media/count);
     free(value);
 
 }

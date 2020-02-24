@@ -14,6 +14,7 @@
 #define PATH_A "/A.pdf"
 #define PATH_B "/B.pdf"
 #define PATH_C "/C.pdf"
+#define PATH "../practica1/Estudiantes"
 
 void copy_file(char *src, char *dest);
 
@@ -22,8 +23,9 @@ int main(int argc, char *argv[]){
 
     FILE* file_name;
     char buffer[NUM_BUFFER];
-    char directory[NUM_BUFFER];
-    char *dest_directory,*src_directory;
+    char directory[NUM_BUFFER],src_directory[NUM_BUFFER];
+    char *dest_directory;
+
 
     file_name = fopen(argv[0],"rb");
     if (file_name ==NULL){
@@ -42,21 +44,26 @@ int main(int argc, char *argv[]){
                 if(strcmp(buffer,"A")==0){
                     
                     dest_directory= strcat(directory,PATH_A);
-                    copy_file("modelos/A.pdf",dest_directory);
+                    sprintf(src_directory,"%s/%s",PATH,dest_directory);
+                    copy_file("modelos/A.pdf",src_directory);
                 
                 }else if (strcmp(buffer,"B")==0)
                 {
                     dest_directory= strcat(directory,PATH_B);
-                    copy_file("modelos/B.pdf",dest_directory);
+                    sprintf(src_directory,"%s/%s",PATH,dest_directory);
+
+                    copy_file("modelos/B.pdf",src_directory);
 
                 }else if (strcmp(buffer,"C")==0){    
 
                     dest_directory= strcat(directory,PATH_C);
-                    copy_file("modelos/C.pdf",dest_directory);
+                    sprintf(src_directory,"%s/%s",PATH,dest_directory);
+
+                    copy_file("modelos/C.pdf",src_directory);
                 }
 
         }
-        printf("Se ha copiado correctamente %s\n",dest_directory);
+        printf("Se ha copiado correctamente %s\n",src_directory);
 
     }
     fclose(file_name);

@@ -42,4 +42,6 @@ clean :
 	rm -rf 0*
 	rm -rf 55*
 	rm -rf 75*
+	rm -rf Estudiantes
 	rm src/log.txt
+	
