@@ -1,3 +1,17 @@
+/*********************************************
+*   Project: Práctica 1 de Sistemas Operativos II 
+*
+*   Program name: pb.c
+*
+*   Author: Sergio Jiménez
+*
+*   Date created: 25-02-2020
+*
+*   Porpuse: Copia el fichero .pdf a cada uno de los estudiantes asignados
+*
+*   Revision History: Reflejado en el repositorio de GitHub
+|*********************************************/
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -8,7 +22,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
-#include <signal.h>
+
 
 #define NUM_BUFFER 4096
 #define PERMISOS 0644
@@ -17,54 +31,53 @@
 #define PATH_C "/C.pdf"
 #define PATH "../practica1/Estudiantes"
 
-void copy_file(char *src, char *dest);
-void manejador(int signo);
+void copiar_fichero(char *src, char *dest);
 
 int main(int argc, char *argv[]){
 
     FILE* file_name;
     char buffer[NUM_BUFFER];
-    char directory[NUM_BUFFER],src_directory[NUM_BUFFER];
-    char *dest_directory;
-    signal(SIGINT,manejador);
+    char directorio[NUM_BUFFER],src_directorio[NUM_BUFFER];
+    char *dest_directorio;
     
     file_name = fopen(argv[0],"rb");
     if (file_name ==NULL){
 
-        fprintf(stderr,"Error en la apertura del archivo %s\n",argv[1]);
+        fprintf(stderr,"[PB] Error en la apertura del archivo %s\n",argv[1]);
         exit(EXIT_FAILURE);
     }
 
     while(fscanf(file_name,"%s",buffer)!=EOF){
             if(strlen(buffer)==8){
-                strcpy(directory,buffer);
+                strcpy(directorio,buffer);
 
             }
             else{
                 
                 if(strcmp(buffer,"A")==0){
                     
-                    dest_directory= strcat(directory,PATH_A);
-                    sprintf(src_directory,"%s/%s",PATH,dest_directory);
-                    copy_file("modelos/A.pdf",src_directory);
+                    dest_directorio= strcat(directorio,PATH_A);
+                    sprintf(src_directorio,"%s/%s",PATH,dest_directorio);
+                    
+                    copiar_fichero("modelos/A.pdf",src_directorio);
                 
                 }else if (strcmp(buffer,"B")==0)
                 {
-                    dest_directory= strcat(directory,PATH_B);
-                    sprintf(src_directory,"%s/%s",PATH,dest_directory);
+                    dest_directorio= strcat(directorio,PATH_B);
+                    sprintf(src_directorio,"%s/%s",PATH,dest_directorio);
 
-                    copy_file("modelos/B.pdf",src_directory);
+                    copiar_fichero("modelos/B.pdf",src_directorio);
 
                 }else if (strcmp(buffer,"C")==0){    
 
-                    dest_directory= strcat(directory,PATH_C);
-                    sprintf(src_directory,"%s/%s",PATH,dest_directory);
+                    dest_directorio= strcat(directorio,PATH_C);
+                    sprintf(src_directorio,"%s/%s",PATH,dest_directorio);
 
-                    copy_file("modelos/C.pdf",src_directory);
+                    copiar_fichero("modelos/C.pdf",src_directorio);
                 }
 
         }
-        printf("Se ha copiado correctamente %s\n",src_directory);
+        printf("[PB] Se ha copiado correctamente %s\n",src_directorio);
 
     }
     fclose(file_name);
@@ -72,26 +85,25 @@ int main(int argc, char *argv[]){
 
 }
 
-void copy_file(char *src, char *dest){
-    int source_file, dest_file, num_write, num_read;
+void copiar_fichero(char *src, char *dest){
+    int source_file, dest_file, num_escrito, num_leido;
     unsigned char buffer[NUM_BUFFER];
-
 
     source_file = open(src, O_RDONLY);
     dest_file = open(dest, O_CREAT | O_WRONLY,PERMISOS);
 
     while (1) {
-        num_read = read(source_file, buffer, NUM_BUFFER);
-        if (num_read == -1) {
-            fprintf(stderr,"Error en la copia del fichero de fuente.\n");
+        num_leido = read(source_file, buffer, NUM_BUFFER);
+        if (num_leido == -1) {
+            fprintf(stderr,"[PB] Error en la copia del fichero de fuente.\n");
             exit(EXIT_FAILURE);
         }
-        num_write = num_read;
-        if (num_write == 0) break;
+        num_escrito = num_leido;
+        if (num_escrito == 0) break;
 
-        num_read = write(dest_file, buffer, num_write);
-        if (num_read == -1) {
-            fprintf(stderr,"Error en la escritura del fichero de salida\n");
+        num_leido = write(dest_file, buffer, num_escrito);
+        if (num_leido == -1) {
+            fprintf(stderr,"[PB] Error en la escritura del fichero de salida\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -100,10 +112,4 @@ void copy_file(char *src, char *dest){
     close(dest_file);
 }
 
-
-void manejador(int signo){
-
-    printf("[PB %d] Todos los procesos están muertos .\n",getpid());
-    
-}
 
