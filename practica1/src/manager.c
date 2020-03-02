@@ -15,13 +15,13 @@
 #define LOG_TEXT4 "Creación de archivos con nota necesaria para alcanzar la nota de corte, finalizada. \n"
 
 pid_t general_pids[3];
+FILE *fd_log;
 
 void manejador(int);
 
 
 int main(int argc, char *argv[]){
-    char media[2]={0};
-    FILE* fd_log;
+    char media[5]={0};
     fd_log = fopen(LOG,"wb");
     if(fd_log == NULL){
         fprintf(stderr,"[MANAGER] Error en la apertura del archivo %s \n",LOG);
@@ -29,10 +29,15 @@ int main(int argc, char *argv[]){
     }
     fprintf(fd_log,"%s",LOG_TEXT1);
     pid_t pid_pa;
+    
     pid_pa = fork();
+    if(signal(SIGINT,manejador)==SIG_ERR){
+        fprintf(stderr,"Error en el paso de la señal");
+        return EXIT_FAILURE;
+    }
     int status,i, tuberia[2];
     pipe(tuberia);
-    signal(SIGINT,manejador);
+    
     
     switch (pid_pa)
         {
@@ -55,9 +60,7 @@ int main(int argc, char *argv[]){
         return EXIT_FAILURE;
     }
     fprintf(fd_log,"%s",LOG_TEXT2);
-
     sleep(2);
-
     pid_t pids[2];
 
     for ( i = 0; i < 2; i++)
@@ -91,7 +94,7 @@ int main(int argc, char *argv[]){
         }
     }
     
-    for ( i = 0; i < 2; i++)
+    for (i = 0; i < 2; i++)
     {
         pid_t wait_pid = wait(&status);
         if(wait_pid == pids[0]){
@@ -106,18 +109,41 @@ int main(int argc, char *argv[]){
         }
     }
     read(tuberia[0],media,sizeof(media));
-    fprintf(fd_log,"La nota media de la clase es: %s.\n FIN DEL PROGRAMA. \n", media);
+    fprintf(fd_log,"La nota media de la clase es: %s.\nFIN DEL PROGRAMA. \n", media);
     fclose(fd_log);
     return EXIT_SUCCESS; 
     
 }
 void manejador(int signal){
-    int i;
-    for ( i = 0; i < 3; i++)
+    int i,status;
+    pid_t pid_pd;
+    for (i = 0; i < 3; i++)
     {
+        if(general_pids[i]!=0){
         kill(general_pids[i],SIGKILL);
-    }
-    printf("[MANAGER] Todos los procesos están mueertos .\n");
+        }
     
+    }    
+    printf("[MANAGER] Todos los procesos están muertos .\n");
+    pid_pd = fork();
+
+    switch (pid_pd)
+        {
+        case -1:
+            printf("[MANAGER] No se ha podido crear el proceso D \n");
+            exit(EXIT_FAILURE);
+        case 0:
+            printf("[MANAGER] Proceso D creado\n");
+            if(execl("./exec/pd",FICHERO,NULL)==-1){
+                fprintf(stderr,"[MANAGER] Error en el execl()\n");
+                exit(EXIT_FAILURE);
+            }
+            
+        }
+    
+    waitpid(pid_pd,&status,0);
+    fprintf(fd_log,"El usuario ha utilizado CTRL+C.\n ******** Finalizacíon del Programa ********");
+    fclose(fd_log);
+    exit(EXIT_SUCCESS);
 }
 

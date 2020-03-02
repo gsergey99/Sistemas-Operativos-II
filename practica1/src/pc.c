@@ -8,6 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #define NUM_BUFFER 4096
 #define PERMISOS 0644
@@ -16,6 +17,8 @@
 void write_file_mark(char *dst, int mark);
 int calculate_mark(int first_mark);
 void calculate_media(int media[],int count);
+void manejador(int signo);
+
 
 int main(int argc, char *argv[]){
 
@@ -23,11 +26,10 @@ int main(int argc, char *argv[]){
     char buffer[NUM_BUFFER], directory[NUM_BUFFER],src_directory[NUM_BUFFER];
     file_name = fopen(argv[0],"rb");
     int first_mark, second_mark, count;
-    int media[25];
     count =0;
     int *out;
     out=(int *) malloc(sizeof(int) * 25);
-
+    signal(SIGINT,manejador);
 
     if(file_name == NULL){
         fprintf(stderr,"Error en la apertura del archivo %s",argv[1]);
@@ -59,7 +61,7 @@ void write_file_mark(char *dst, int mark){
     char *dest_directory;
     char *text = "La nota que debes obtener en este nuevo examen para superar la prueba es ";
     dest_directory = strcat(dst,"/aviso.txt");
-    dest = fopen(dest_directory,"wb");
+    dest = fopen(dest_directory,"w");
     if(dest == NULL){
         fprintf(stderr,"Error en la apertura del archivo");
         exit(EXIT_FAILURE);
@@ -85,4 +87,10 @@ void calculate_media(int value[], int count){
     printf("%d\n",media/count);
     free(value);
 
+}
+
+void manejador(int signo){
+
+    printf("[PC %d] Todos los procesos están muertos .\n",getpid());
+    
 }

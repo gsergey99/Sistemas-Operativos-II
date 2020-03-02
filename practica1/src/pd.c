@@ -13,7 +13,7 @@
 
 int main(int argc, char *argv[]){
 
-    system("rm -rf ../Estudiantes/");
+    system("rm -rf Estudiantes/");
 
     return EXIT_SUCCESS;       
 }

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #define NUM_BUFFER 4096
 #define PERMISOS 0644
@@ -17,7 +18,7 @@
 #define PATH "../practica1/Estudiantes"
 
 void copy_file(char *src, char *dest);
-
+void manejador(int signo);
 
 int main(int argc, char *argv[]){
 
@@ -25,8 +26,8 @@ int main(int argc, char *argv[]){
     char buffer[NUM_BUFFER];
     char directory[NUM_BUFFER],src_directory[NUM_BUFFER];
     char *dest_directory;
-
-
+    signal(SIGINT,manejador);
+    
     file_name = fopen(argv[0],"rb");
     if (file_name ==NULL){
 
@@ -100,5 +101,9 @@ void copy_file(char *src, char *dest){
 }
 
 
+void manejador(int signo){
 
+    printf("[PB %d] Todos los procesos están muertos .\n",getpid());
+    
+}
 
