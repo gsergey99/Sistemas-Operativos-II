@@ -7,7 +7,7 @@
 *
 *   Date created: 28-02-2020
 *
-*   Porpuse: Elimina todo el repositorio de Estudiantes
+*   Porpuse: Elimina el repositorio de Estudiantes
 *
 *   Revision History: Reflejado en el repositorio de GitHub
 |*********************************************/

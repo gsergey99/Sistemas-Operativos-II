@@ -11,6 +11,7 @@
 *
 *   Revision History: Reflejado en el repositorio de GitHub
 |*********************************************/
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -30,7 +31,7 @@
 int main(int argc, char *argv[]){
     FILE* file_name;
     char buffer[NUM_BUFFER],directorio[NUM_BUFFER];
-    int p_dir = mkdir(PATH,PERMISOS);
+    int p_dir = mkdir(PATH,PERMISOS); /*Creamos el directorio Estudiantes*/
     
     if (p_dir ==-1){
         fprintf(stderr,"[PA] Error en la creación del directorio <<Estudiantes>>.\n");
@@ -46,9 +47,9 @@ int main(int argc, char *argv[]){
 
     while(fscanf(file_name,"%s",buffer)!=EOF){
         
-        if (strlen(buffer)==8){
+        if (strlen(buffer)==8){ /*Comprobamos que el valor buffer es el DNI del estudiante*/
             sprintf(directorio,"%s/%s",PATH,buffer);
-            int res_dir = mkdir(directorio,PERMISOS);
+            int res_dir = mkdir(directorio,PERMISOS); /*Creamos el directorio con el nombre de los DNIs*/
             if (res_dir == -1){
                 fprintf(stderr,"[PA] Error en la creación de los directorios de los DNIs");
                 exit(EXIT_FAILURE);

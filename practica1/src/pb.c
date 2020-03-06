@@ -48,7 +48,7 @@ int main(int argc, char *argv[]){
     }
 
     while(fscanf(file_name,"%s",buffer)!=EOF){
-            if(strlen(buffer)==8){
+            if(strlen(buffer)==8){ /*Comprobamos que el valor buffer es el DNI del estudiante*/
                 strcpy(directorio,buffer);
 
             }

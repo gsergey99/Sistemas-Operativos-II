@@ -131,6 +131,7 @@ void crear_pa(){
             }
             
         }
+
 }
 
 void crear_pb_pc(int tuberia[]){
@@ -182,6 +183,5 @@ void esperar_pb_pc(){
             fprintf(file_log,"%s","Creación de archivos con nota necesaria para alcanzar la nota de corte, finalizada. \n");
         }
     }
-
 }
 

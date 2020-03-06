@@ -49,10 +49,10 @@ int main(int argc, char *argv[]){
     }
 
     while(fscanf(file_name,"%s",buffer)!=EOF){
-        if(strlen(buffer)==8){
+        if(strlen(buffer)==8){ /*Comprobamos que el valor buffer es el DNI del estudiante*/
             strcpy(directorio,buffer);
 
-        }else if (strlen(buffer)<=2 && (isdigit(buffer[0]) || isdigit(buffer[1]))){
+        }else if (strlen(buffer)<=2 && (isdigit(buffer[0]) || isdigit(buffer[1]))){ /*Comprobamos si el buffer es la nota del primer examen*/
             nota1 = atoi(buffer);
             nota2 = calcular_nota(nota1);
             sprintf(src_directorio,"%s/%s",PATH,directorio);
