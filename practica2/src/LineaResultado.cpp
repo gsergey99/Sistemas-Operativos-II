@@ -3,7 +3,7 @@
 #include "LineaResultado.h"
 #include <iostream>
 
-LineaResultado::LineaResultado(int hilo,int linea_inicial, int line_final, int linea_encontrada,std::string palabra_actual,std::string palabra_anterior,std::string palabra_posterior){
+LineaResultado::LineaResultado(int hilo,int linea_inicial, int linea_final, int linea_encontrada,std::string palabra_actual,std::string palabra_anterior,std::string palabra_posterior){
 
     this->num_hilo = hilo;
     this->linea_inicial=linea_inicial;
@@ -13,6 +13,9 @@ LineaResultado::LineaResultado(int hilo,int linea_inicial, int line_final, int l
     this->palabra_anterior=palabra_anterior;
     this->palabra_posterior=palabra_posterior;
 
+}
+LineaResultado::LineaResultado(){
+    
 }
 
 int LineaResultado::get_NumHilo(){

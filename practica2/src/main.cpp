@@ -4,32 +4,49 @@
 #include "LineaResultado.h"
 #include <string.h>
 #include <regex>
+#include <vector>
+#include <queue>
+#include <sstream>
 
 using namespace std;
 
 int contar_filas(std::string fichero);
 void encontrar_palabra (std::string fichero, std::string palabra);
 void leer_line();
+void ajustar_linea(LineaResultado lista_objetos[], int num_lineas, int num_hilos);
     
     
 int main(int argc, char *argv[])
 {
-    
+    std::string fichero = argv[1];
+    std::string palabra = argv[2];
+    int num_hilos = atoi(argv[3]);
+   
+    int reference = 0;
+    int num_lineas;
+    LineaResultado lista_objetos [num_hilos];
+
     if(argc!=4){
         std::cerr << "El número de argumentos es incorrecto <nombre_fichero> <palabra> <numero_hilos>" <<std::endl;
         exit(EXIT_FAILURE);
     }
 
-    std::string fichero = argv[1];
-    std::string palabra = argv[2];
-    int num_hilos = atoi(argv[3]);
-    int num_filas = contar_filas(fichero);
-    encontrar_palabra ("test.txt", "fidelidad");
+    num_lineas = contar_filas(fichero);
 
+    if(num_lineas<=num_hilos){
+        std::cerr << "El número de hilos es más grande que el número de líneas" <<std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    for(int i = 0;i<num_hilos;i++){
+        reference++;
+        LineaResultado linea_resultado(reference,0,0,0,palabra,"","");
+        lista_objetos[i]=linea_resultado;
+    }
     
-    
-    //LineaResultado l(1,2, 3, 4,"hola","adios","std::string palabra_posterior");
-    std::cout << num_filas <<std::endl;
+    ajustar_linea(lista_objetos,num_lineas,num_hilos);  
+    encontrar_palabra (fichero, palabra);
+
     
 }
 
@@ -41,14 +58,13 @@ int contar_filas(std::string fichero){
 
     src_fichero.open(fichero); //src/test.txt
     if (src_fichero.fail()) {
-        cerr << "Error opeing a file" << endl;
+        cerr << "Error al abrir el fichero de entrada" << endl;
         src_fichero.close();
         exit(EXIT_FAILURE);
     }
     
     while (getline(src_fichero, line))
     {
-        //std::cout << line << std::endl;
         num_filas++;
     }
     src_fichero.close();
@@ -75,7 +91,7 @@ void encontrar_palabra (std::string fichero, std::string palabra){
         while(getline(src_fichero,linea)){
             if(std::regex_search(linea,palabra_comp)){
                 caracter = std::regex_replace(linea,palabra_comp,"\e[3m$&\e[O");
-                cout << "Palabra "<< caracter << endl;
+                cout << "Palabra "<< caracter << "\n"<< endl;
 
             }
         }
@@ -107,4 +123,25 @@ void leer_linea(){
     
   }
     src_fichero.close();*/
+}
+void ajustar_linea(LineaResultado lista_obeto[], int num_lineas, int num_hilos){
+
+    int cociente_filas, resto_filas;
+    int rest_individual=0;
+    int unidad = 1;
+    resto_filas = num_lineas % num_hilos;
+    cociente_filas = num_lineas / num_hilos;
+    
+    for(int i=0;i<num_hilos;i++){
+
+        if(rest_individual==resto_filas){
+            lista_obeto[i].set_LineaE(cociente_filas);
+        
+        }else{
+            
+            lista_obeto[i].set_LineaE(cociente_filas+unidad);
+            rest_individual++;
+            
+        }
+    }
 }
