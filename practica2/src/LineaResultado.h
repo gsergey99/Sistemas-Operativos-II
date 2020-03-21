@@ -18,7 +18,6 @@ private:
 public:
 
     LineaResultado(int hilo,int linea_inicial, int line_final, int linea_encontrada,std::string palabra_actual,std::string palabra_anterior,std::string palabra_posterior); // Constructor de Clase
-    LineaResultado();
     int get_NumHilo();
     int get_LineaI();
     int get_LineaF();
