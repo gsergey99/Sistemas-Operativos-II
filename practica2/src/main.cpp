@@ -14,17 +14,22 @@ using namespace std;
 int contar_filas(std::string fichero);
 void encontrar_palabra (std::vector<int> intervalo_lineas,std::string fichero, std::string palabra, int num_hilo);
 std::vector <vector<int>> ajustar_linea(std::vector<vector<int>> intervalo_lineas, int num_lineas, int num_hilos);
-std::mutex semaforo;
+void mostrar_resultado(std::vector<LineaResultado> linea_resultado);
 
+std::mutex semaforo;
+std::mutex semaforo2;
+std::vector<LineaResultado> linea_resultado;
+std::vector<vector<int>> intervalo_lineas;
+std::vector<std::thread> vhilos;
 
 int main(int argc, char *argv[])
 {
     std::string fichero = argv[1];
     std::string palabra = argv[2];
     int num_hilos = atoi(argv[3]);
-    int num_lineas;
-    std::vector<vector<int>> intervalo_lineas;
-    std::vector<std::thread> vhilos;
+    int num_lineas, referencia_hilo;
+    ;
+    referencia_hilo=0;
 
     if(argc!=4){
         std::cerr << "El número de argumentos es incorrecto <nombre_fichero> <palabra> <numero_hilos>" <<std::endl;
@@ -40,6 +45,20 @@ int main(int argc, char *argv[])
 
     std::vector<vector<int>> aux;
     intervalo_lineas = ajustar_linea(intervalo_lineas,num_lineas,num_hilos);
+    
+    for(int i =0;i<num_hilos;i++){
+        referencia_hilo++;
+        vhilos.push_back(std::thread(encontrar_palabra,intervalo_lineas[i],fichero,palabra,referencia_hilo));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    
+    std::for_each(vhilos.begin(),vhilos.end(),std::mem_fn(&std::thread::join));
+
+    mostrar_resultado(linea_resultado);
+    
+    
+    
+    
     /*for ( std::vector<std::vector<int>>::size_type i = 0; i < intervalo_lineas.size(); i++ ){
    for ( std::vector<int>::size_type j = 0; j < intervalo_lineas[i].size(); j++ )
    {
@@ -48,11 +67,7 @@ int main(int argc, char *argv[])
    std::cout << std::endl;
    }*/
    
-    for(int i =0;i<num_hilos;i++){
-        vhilos.push_back(std::thread(encontrar_palabra,intervalo_lineas[i],fichero,palabra,i));
-    }
-
-    std::for_each(vhilos.begin(),vhilos.end(),std::mem_fn(&std::thread::join));
+    
     /*for(int i =0;i<num_hilos;i++){
         encontrar_palabra(intervalo_lineas[i],fichero,palabra,i);
     } */                                                                                  
@@ -81,7 +96,7 @@ int contar_filas(std::string fichero){
 
 void encontrar_palabra (std::vector<int> intervalo_lineas,std::string fichero, std::string palabra,int num_hilo){
     int ref_linea[2]; //Es un vector que continiene el 0 la linea inicial y el 1 la línea final
-    std::vector<LineaResultado> linea_resultado;
+    
     ifstream src_fichero;
     std::string expr_regular = "[¡¿]"+palabra + "[.,:?!]";
     std::regex palabra_comp(expr_regular, std::regex_constants::ECMAScript | std::regex_constants::icase);
@@ -97,7 +112,7 @@ void encontrar_palabra (std::vector<int> intervalo_lineas,std::string fichero, s
     ref_linea[0] = *ref_linea_inicial;
     ref_linea[1] = ref_linea_final;
     int num_linea = 0;    
-    semaforo.lock();
+    
     src_fichero.open(fichero); //src/test.txt
     if (src_fichero.fail()) {
         cerr << "[MANAGER] Error al abrir el fichero de entrada" << endl;
@@ -108,9 +123,10 @@ void encontrar_palabra (std::vector<int> intervalo_lineas,std::string fichero, s
     if(src_fichero.is_open()){
         while(getline(src_fichero,linea)){
             if(ref_linea[0]<=num_linea && ref_linea[1]>=num_linea){
+                                
                 if(std::regex_search(linea,palabra_comp) || std::regex_search(linea,palabra_sola)){
                     tupla_palabras = std::regex_replace(linea,palabra_comp,"\e[3m$&\e[O");
-                    cout << "LINEA " << tupla_palabras << endl;
+                    //cout << "LINEA " << tupla_palabras << endl;
                     regex expr_reg_espacio("\\s+");
 
                     sregex_token_iterator iter(tupla_palabras.begin(), tupla_palabras.end(), expr_reg_espacio,-1);
@@ -121,27 +137,27 @@ void encontrar_palabra (std::vector<int> intervalo_lineas,std::string fichero, s
                         
                         if(std::regex_search(vector_aux.at(i),palabra_comp)|| std::regex_search(vector_aux.at(i),palabra_sola)){ // 
 
-                            
-                            cout << "Palabra encontrada " << vector_aux.at(i) << endl;
+                            //cout << "Palabra encontrada " << vector_aux.at(i) << endl;
                             palabra_encontrada = vector_aux.at(i);
                             if(vector_aux.at(i)==vector_aux.back()){
-                                cout << "Palabra posterior " << "nada" << endl;
+                                //cout << "Palabra posterior " << "nada" << endl;
                                 palabra_posterior = "";
                             }else{
-                                cout << "Palabra posterior " << vector_aux.at(i+1) << endl;
+                                //cout << "Palabra posterior " << vector_aux.at(i+1) << endl;
                                 palabra_posterior = vector_aux.at(i+1);
                             }
                             auto ref_linea_anterior = vector_aux.begin();
                             //cout << "Palabra anterior l" << *ref_linea_anterior << endl;
                             if(vector_aux.at(i)==*ref_linea_anterior){
                                 palabra_anterior = "";
-                                cout << "Palabra anterior " << palabra_anterior << endl;
+                                //cout << "Palabra anterior " << palabra_anterior << endl;
                             }else{
                                 palabra_anterior = vector_aux.at(i-1);
-                                cout << "Palabra anterior " << palabra_anterior << endl;
+                                //cout << "Palabra anterior " << palabra_anterior << endl;
                             }
-                            LineaResultado l_resultado(num_hilo,ref_linea[0],ref_linea[1],num_linea,palabra_encontrada,palabra_anterior,palabra_posterior);
                             
+                            LineaResultado l_resultado(num_hilo,ref_linea[0],ref_linea[1],num_linea,palabra_encontrada,palabra_anterior,palabra_posterior);
+                            std::lock_guard<std::mutex>lk(semaforo);
                             linea_resultado.push_back(l_resultado);
                         }
                     }
@@ -149,15 +165,20 @@ void encontrar_palabra (std::vector<int> intervalo_lineas,std::string fichero, s
             }
             num_linea++;
         }
-        for (std::vector<LineaResultado>::size_type j = 0; j < linea_resultado.size(); j++ ){
-            linea_resultado[j].toString();
-        }
-   std::cout << std::endl;   
     }
-    semaforo.unlock();
     src_fichero.close();
 }
 
+void mostrar_resultado(std::vector<LineaResultado> linea_resultado){
+    semaforo2.lock();
+    for (std::vector<LineaResultado>::size_type j = 0; j < linea_resultado.size(); j++ ){
+            linea_resultado[j].toString();
+        }
+        
+    std::cout << std::endl;
+    linea_resultado.clear();
+    semaforo2.unlock();
+} 
 
 std::vector<vector<int>> ajustar_linea(std::vector<vector<int>> intervalo_lineas, int num_lineas, int num_hilos){
     
