@@ -1,6 +1,6 @@
 #include <fstream>
 #include <stdlib.h>
-#include "LineaResultado.h"
+#include "../include/LineaResultado.h"
 #include <iostream>
 
 LineaResultado::LineaResultado(int hilo,int linea_inicial, int linea_final, int linea_encontrada,std::string palabra_actual,std::string palabra_anterior,std::string palabra_posterior){
@@ -36,7 +36,7 @@ std::string LineaResultado::get_PalabraPo(){
     return this->palabra_posterior;
 }
 void LineaResultado::toString(){
-    std::cout <<"[Hilo: " << std::to_string(this->num_hilo) << " inicio " << std::to_string(this->linea_inicial) << " -final " << std::to_string(this->linea_final) << " ]:: línea " << std::to_string(this->linea_encontrada) << " ... " << this->palabra_anterior << " "<<this->palabra_actual << " " << this->palabra_posterior<<std::endl;
+    std::cout <<"[Hilo: " << std::to_string(this->num_hilo) << " inicio " << std::to_string(this->linea_inicial) << " - final " << std::to_string(this->linea_final) << " ]:: línea " << std::to_string(this->linea_encontrada) << " ... " << this->palabra_anterior << " "<<this->palabra_actual << " " << this->palabra_posterior<<std::endl;
 }
 void LineaResultado::set_NumHilo(int hilo){
     this->num_hilo=hilo;
