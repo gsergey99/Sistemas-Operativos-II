@@ -1,61 +1,62 @@
 #include <fstream>
 #include <stdlib.h>
 #include "../include/LineaResultado.h"
+#include "../include/colours.h"
 #include <iostream>
 
-LineaResultado::LineaResultado(int hilo,int linea_inicial, int linea_final, int linea_encontrada,std::string palabra_actual,std::string palabra_anterior,std::string palabra_posterior){
+LineResult::LineResult(int hilo,int linea_inicial, int linea_final, int linea_encontrada,std::string palabra_actual,std::string palabra_anterior,std::string palabra_posterior){
 
-    this->num_hilo = hilo;
-    this->linea_inicial=linea_inicial;
-    this->linea_final=linea_final;
-    this->linea_encontrada=linea_encontrada;
-    this->palabra_actual=palabra_actual;
-    this->palabra_anterior=palabra_anterior;
-    this->palabra_posterior=palabra_posterior;
+    this->num_thread = hilo;
+    this->initial_line=linea_inicial;
+    this->final_line=linea_final;
+    this->found_line=linea_encontrada;
+    this->actual_word=palabra_actual;
+    this->before_word=palabra_anterior;
+    this->next_word=palabra_posterior;
 
 }
-int LineaResultado::get_NumHilo(){
-    return this->num_hilo;
+int LineResult::get_NumThread(){
+    return this->num_thread;
 }
-int LineaResultado::get_LineaI(){
-    return this->linea_inicial;
+int LineResult::get_Initial_Line(){
+    return this->initial_line;
 }
-int LineaResultado::get_LineaF(){
-    this->linea_final;
+int LineResult::get_Final_Line(){
+    this->final_line;
 }
-int LineaResultado::get_LineaE(){
-    return this->linea_encontrada;
+int LineResult::get_Found_Line(){
+    return this->found_line;
 }
-std::string LineaResultado::get_PalabraAc(){
-    return this->palabra_actual;
+std::string LineResult::get_Actual_Word(){
+    return this->actual_word;
 }
-std::string LineaResultado::get_PalabraAn(){
-    return this->palabra_anterior;
+std::string LineResult::get_Before_Word(){
+    return this->before_word;
 }
-std::string LineaResultado::get_PalabraPo(){
-    return this->palabra_posterior;
+std::string LineResult::get_Next_Word(){
+    return this->next_word;
 }
-void LineaResultado::toString(){
-    std::cout <<"[Hilo: " << std::to_string(this->num_hilo) << " inicio " << std::to_string(this->linea_inicial) << " - final " << std::to_string(this->linea_final) << " ]:: línea " << std::to_string(this->linea_encontrada) << " ... " << this->palabra_anterior << " "<<this->palabra_actual << " " << this->palabra_posterior<<std::endl;
+void LineResult::toString(){
+    std::cout <<"[Hilo: " << std::to_string(this->num_thread) << " inicio " << std::to_string(this->initial_line) << " - final " << std::to_string(this->final_line) << " ]:: línea " << std::to_string(this->found_line) << " ... " << this->before_word << " "<< this->actual_word << " " << this->next_word<<std::endl;
 }
-void LineaResultado::set_NumHilo(int hilo){
-    this->num_hilo=hilo;
+void LineResult::set_NumThread(int thread){
+    this->num_thread=thread;
 }
-void LineaResultado::set_LineaI(int linea_inicial){
-    this->linea_inicial = linea_inicial;
+void LineResult::set_Initial_Line(int initial_line){
+    this->initial_line = initial_line;
 }
-void LineaResultado::set_LineaF(int linea_final){
-    this->linea_final=linea_final;
+void LineResult::set_Final_Line(int final_line){
+    this->final_line=final_line;
 }
-void LineaResultado::set_LineaE(int linea_encontrada){
-    this->linea_encontrada = linea_encontrada;
+void LineResult::set_Found_Line(int found_line){
+    this->found_line = found_line;
 }
-void LineaResultado::set_PalabraAc(std::string palabra_actual){
-    this->palabra_actual=palabra_actual;
+void LineResult::set_Actual_Word(std::string acutal_word){
+    this->actual_word=actual_word;
 }
-void LineaResultado::set_PalabraAn(std::string palabra_anterior){
-    this->palabra_anterior=palabra_anterior;
+void LineResult::set_Before_Word(std::string before_word){
+    this->before_word=before_word;
 }
-void LineaResultado::set_PalabraPos(std::string palabra_posterior){
-    this->palabra_posterior=palabra_posterior;
+void LineResult::set_Next_Word(std::string next_word){
+    this->next_word=next_word;
 }

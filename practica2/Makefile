@@ -2,33 +2,33 @@ DIROBJ := obj/
 DIREXE := exec/
 DIRHEA := include/
 DIRSRC := src/
+DIRBOOKS:= books/
 
-CFLAGS := -I$(DIRHEA) -c -Wall -ansi
-LDLIBS := -lpthread -lrt
+CFLAGS := -I$(DIRHEA) -c -pthread -std=c++11
 CC := g++
 
-all : dirs main
+all : dirs LineaResultado SSOOIIGLE main
 
 dirs:
 	mkdir -p $(DIROBJ) $(DIREXE)
 
-main: $(DIROBJ)main.o 
-	$(CC) -o $(DIREXE)$@ $^ $(LDLIBS)
+LineaResultado:
+	$(CC) -o $(DIROBJ)LineaResultado.o $(DIRSRC)LineaResultado.cpp $(CFLAGS)
 
+SSOOIIGLE: 
+	$(CC) -o $(DIROBJ)SSOOIIGLE.o $(DIRSRC)SSOOIIGLE.cpp $(CFLAGS)
 
-$(DIROBJ)%.o: $(DIRSRC)%.cpp
-	$(CC) $(CFLAGS) $^ -o $@
+main:
+	$(CC) -o $(DIREXE)SSOOIIGLE $(DIROBJ)SSOOIIGLE.o $(DIROBJ)LineaResultado.o -pthread -std=c++11
 
-run:
-	./$(DIREXE)main
+run-example1:
+	./$(DIREXE)SSOOIIGLE $(DIRBOOKS)17\ LEYES\ DEL\ TRABAJO\ EN\ EQUIPO.txt final 45
 
-solution:
-	./$(DIREXE)manager 2 3 4
+run-example2:
+	./$(DIREXE)SSOOIIGLE $(DIRBOOKS)VIVE\ TU\ SUEÑO\ -\ JOHN\ MAXWELL.txt día 34
 
 clean : 
-	rm -rf *~ core $(DIROBJ) $(DIREXE) $(DIRHEA)*~ $(DIRSRC)*~
-	rm -rf 0*
-	rm -rf 55*
-	rm -rf 75*
+	rm -rf *~ core $(DIROBJ) $(DIREXE) $(DIRHEA)*~ $(DIRSRC)*~ $(DIRBOOKS)*~
+
 
 	
