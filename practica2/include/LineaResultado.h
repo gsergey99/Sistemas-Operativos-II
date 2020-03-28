@@ -1,5 +1,20 @@
+/*********************************************
+*   Project: Práctica 2 de Sistemas Operativos II 
+*
+*   Program name: LineaResultado.h
+*
+*   Author: Sergio Jiménez
+*
+*   Date created: 09-03-2020
+*
+*   Porpuse: Librería en la que se define los diferentes métodos de la clase LineResult
+*
+*   Revision History: Reflejado en el repositorio de GitHub
+|*********************************************/
+
 #include <fstream>
 #include <stdlib.h>
+#include "colours.h"
 
 
 #ifndef LINEARESULTADO_H 

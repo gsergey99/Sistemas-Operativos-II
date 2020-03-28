@@ -1,3 +1,17 @@
+/*********************************************
+*   Project: Práctica 2 de Sistemas Operativos II 
+*
+*   Program name: LineaResultado.cpp
+*
+*   Author: Sergio Jiménez
+*
+*   Date created: 09-03-2020
+*
+*   Porpuse: Definición de la clase LineResult con el fin de guardar la información de la palabra encontrada
+*
+*   Revision History: Reflejado en el repositorio de GitHub
+|*********************************************/
+
 #include <fstream>
 #include <stdlib.h>
 #include "../include/LineaResultado.h"
@@ -37,7 +51,7 @@ std::string LineResult::get_Next_Word(){
     return this->next_word;
 }
 void LineResult::toString(){
-    std::cout <<"[Hilo: " << std::to_string(this->num_thread) << " inicio " << std::to_string(this->initial_line) << " - final " << std::to_string(this->final_line) << " ]:: línea " << std::to_string(this->found_line) << " ... " << this->before_word << " "<< this->actual_word << " " << this->next_word<<std::endl;
+    std::cout <<"[Hilo: " << CIAN <<std::to_string(this->num_thread) << RESET << " inicio " << GREEN << std::to_string(this->initial_line) << RESET << " - final " << GREEN << std::to_string(this->final_line) << RESET << " ]:: línea " << VIOLET << std::to_string(this->found_line) << RESET << " ... " << this->before_word << " "<< YELLOW << this->actual_word << RESET << " " << this->next_word<<std::endl;
 }
 void LineResult::set_NumThread(int thread){
     this->num_thread=thread;
