@@ -15,49 +15,43 @@
 #include <iostream>
 #include <cctype>
 #include <fstream>
-#include <stdlib.h>
-#include "../include/LineaResultado.h"
-#include "../include/colours.h"
-#include <string.h>
 #include <regex>
 #include <map>
 #include <vector>
 #include <thread>
-#include <sstream>
 #include <mutex>
-#include <locale>
-#include <math.h>
 
+#include <stdlib.h>
+#include <string.h>
 
-
+#include "../include/LineaResultado.h"
+#include "../include/colours.h"
 
 int line_count(std::string file);
 std::vector <std::vector<int>> line_manage(std::vector<std::vector<int>> interval_lines, int num_lines, int num_threads);
-bool correct_word(std::string word_to_compare,std::string found_word);
+bool correct_word(std::string word_to_compare);
 char to_lowercase(char c);
 
 void find_word (std::vector<int> interval_lines,std::string file, std::string word,int num_thread); 
 void show_result();
 
-
 std::mutex semaphore;
 std::map <int,std::vector<LineResult>> result;
 std::vector<std::thread> g_vhilos;
 
-
 int main(int argc, char *argv[])
 {
+    if(argc!=4){
+        std::cerr << FRED("[MANAGER] El número de argumentos es incorrecto <nombre_fichero> <palabra> <numero_hilos>.") <<std::endl;
+        exit(EXIT_FAILURE);
+    }
+
     std::string file = argv[1];
     std::string word = argv[2];
     int num_threads = atoi(argv[3]);
 
     int num_lines;
     std::vector<std::vector<int>> interval_lines;
-
-    if(argc!=4){
-        std::cerr << FRED("[MANAGER] El número de argumentos es incorrecto <nombre_fichero> <palabra> <numero_hilos>.") <<std::endl;
-        exit(EXIT_FAILURE);
-    }
 
     num_lines = line_count(file);
 
@@ -67,27 +61,28 @@ int main(int argc, char *argv[])
     }
     std::cout << YELLOW << "WELCOME TO " << RESET << FBLU("SS") << FRED("O") << FYEL("O") << FBLU("II") << FGRN("GL")<<FRED("E")<<  YELLOW << " : " << RESET << std::endl;
 
-    
     interval_lines = line_manage(interval_lines,num_lines,num_threads);
     std::cout << "[MANAGER] "<< BOLD(FBLU("Creando hilos de hilos")) << std::endl;
 
     for(int i = 0;i<num_threads;i++){
         
-        g_vhilos.push_back(std::thread(find_word,interval_lines[i],file,word,i));
+        g_vhilos.push_back(std::thread(find_word,interval_lines[i],file,word,i)); /*Referenciamos los hilos*/
     }
 
     std::cout << "[MANAGER] "<< BOLD(FBLU("Esperando terminación de hilos")) << std::endl;
     
-    std::for_each(g_vhilos.begin(),g_vhilos.end(),std::mem_fn(&std::thread::join));
+    std::for_each(g_vhilos.begin(),g_vhilos.end(),std::mem_fn(&std::thread::join)); 
 
     show_result();
+
+    std::cout << "[MANAGER] "<< BOLD(FBLU("Hilos terminados")) << std::endl;
 
     return EXIT_SUCCESS;
                                                                                   
 }
 
 int line_count(std::string file){ 
-    /*Función que cuenta las líneas del fichero indicado*/    
+    /*Función que cuenta las líneas del fichero seleccionado*/    
     
     std::ifstream src_file;
     int num_lines=0;
@@ -111,31 +106,28 @@ int line_count(std::string file){
 void find_word (std::vector<int> interval_lines,std::string file, std::string word,int num_thread){ 
     /*Función de búsqueda de la palabra indicada en la línea de comandos*/
 
-    int ref_line[2]; //Es un vector que continiene el 0 la linea inicial y el 1 la línea final
+    int ref_line[2]; /*Es un vector que continiene el 0 la linea inicial y el 1 la línea final*/
     std::vector<LineResult> line_result;
     
     std::ifstream src_file;
 
-    std::string expr_regular_general = "[<¡«•—(¿ ]" + word + "[ \r\n ».—,:;>)?!]";
-    
-   
-
-    std::regex word_expr_regular_g(expr_regular_general,std::regex_constants::ECMAScript | std::regex_constants::icase | std::regex_constants::nosubs);/*Definimos cada una de las expresiones regulares*/  
-    std::regex word_alone(word, std::regex_constants::ECMAScript | std::regex_constants::icase | std::regex_constants::nosubs); 
-    
+    std::string expr_regular_general = "\\b" + word + "\\b"; /*Definimos la expresión regular que incluye cualquier signo de puntuación*/
     std::string line;
     std::string tuple_words;
     std::string before_word;
-    std::string word_next;
+    std::string word_next; 
     std::string found_word;
     std::string aux_word;
     
+    std::regex word_expr_regular_g(expr_regular_general,std::regex_constants::ECMAScript | std::regex_constants::icase| std::regex_constants::nosubs);/*Definimos cada una de las expresiones regulares*/  
+    std::regex word_alone(word, std::regex_constants::ECMAScript | std::regex_constants::icase); /*Las expresiones tendrán en cuenta las palabras mayúsculas, minúsuculas y que no pertenezca a una palabra derivada*/
+        
     auto ref_line_initial = interval_lines.begin();
     auto ref_line_final = interval_lines.back();
     ref_line[0] = *ref_line_initial;
     ref_line[1] = ref_line_final;
     int num_line = 0;
-    bool continue_word;
+    bool continue_find;
     
     
     src_file.open(file); 
@@ -147,12 +139,12 @@ void find_word (std::vector<int> interval_lines,std::string file, std::string wo
     
     if(src_file.is_open()){
         while(getline(src_file,line)){
-            if(ref_line[0]<=num_line && ref_line[1]>=num_line){
+            if(ref_line[0]<=num_line && ref_line[1]>=num_line){ /*Comparamos que el el hilo está dentro del rango de líneas*/
 
-                if(std::regex_search(line,word_expr_regular_g) || std::regex_search(line,word_alone,std::regex_constants::match_continuous)) {  
-                    tuple_words = std::regex_replace(line,word_expr_regular_g,"\e[3m$&\e[0m"); 
-
-                    std::regex expr_reg_espacio("\\s+");
+                if(std::regex_search(line,word_expr_regular_g)) {  /*Buscamos las ocurrrencias en el cada línea del ficheros*/
+                    tuple_words = std::regex_replace(line,word_expr_regular_g," ...$1\e[3m$&\e[0m"); 
+                    
+                    std::regex expr_reg_espacio("\\s+"); /*Separamos las líneas que continen las ocurrencias en palabras*/
                     std::sregex_token_iterator iter(tuple_words.begin(), tuple_words.end(), expr_reg_espacio,-1);
                     std::sregex_token_iterator end;
                     std::vector<std::string> vector_aux(iter, end);
@@ -166,12 +158,8 @@ void find_word (std::vector<int> interval_lines,std::string file, std::string wo
                         for (char &c: aux_found) { // Covertimos la palabra a minúscula
 		                    c = to_lowercase(c);
 	                    }      
-                            
-                        for (char &c: aux_word) { // Convertimos la palabra a minúscula 
-		                    c = to_lowercase(c);
-                            
-	                    }
-                        if(correct_word(aux_found,aux_word)&&(aux_word == aux_found || std::regex_search(aux_found,word_alone)||std::regex_search(aux_found,word_expr_regular_g))){
+                                                    
+                        if(correct_word(aux_found)&&(std::regex_search(vector_aux[i],word_alone)|| (std::regex_search(vector_aux[i],word_expr_regular_g)))){ /*Segundo filtrado para cada una de las palabras*/
                             
                                 if(vector_aux.at(i)==vector_aux.back()){ 
                                     
@@ -181,19 +169,21 @@ void find_word (std::vector<int> interval_lines,std::string file, std::string wo
                                     word_next = vector_aux.at(i+1);
                                 }
 
-                                auto ref_linea_anterior = vector_aux.begin();
-                                if(vector_aux.at(i)==*ref_linea_anterior){
+                                auto ref_before_line = vector_aux.begin();
+                                if(vector_aux.at(i)==*ref_before_line){
 
                                     before_word = "";
                                 }else{
 
                                     before_word = vector_aux.at(i-1);
                                 }
+                                word_next = " " + word_next + " ..."; /*Insertamos la palabra anterior y posterior a la palabra encontrada*/
+                                before_word = " " + before_word + " ";
+                                found_word.insert(3,before_word);
+                                found_word.insert(found_word.size(), word_next);
                                     
-                                LineResult l_resultado(num_thread+1,ref_line[0],ref_line[1],num_line+1,found_word,before_word,word_next);
+                                LineResult l_resultado(num_thread+1,ref_line[0],ref_line[1],num_line+1,found_word);
                                 line_result.push_back(l_resultado);
-                    
-                            
                         }
                         
                     }
@@ -229,7 +219,7 @@ void show_result(){
 } 
 
 std::vector<std::vector<int>> line_manage(std::vector<std::vector<int>> interval_lines, int num_lines, int num_threads){
-    /*Función para asignar las diferentes líneas a cada una de los hilos*/
+    /*Función para asignar las diferentes líneas a cada uno de los hilos*/
     
     std::vector<int> init_final;
     int line_object[num_threads];
@@ -265,30 +255,16 @@ std::vector<std::vector<int>> line_manage(std::vector<std::vector<int>> interval
     return interval_lines;
 }
 
-bool correct_word(std::string word_to_compare,std::string word){
+bool correct_word(std::string word_to_compare){
     /*Función que comprueba si una palabra está dentro de la expresión regular definida y añadirla a nuestra clase LineResult*/
 
     bool punctuation = false;
+    auto first_character = word_to_compare.begin();
+    auto second_character = word_to_compare.begin()+1;    
     
-    for (char &c: word_to_compare) { // Convertimos la palabra a minúscula
-		c = to_lowercase(c);
-	}   
-
-    for(int i = 0;i< word_to_compare.size();i++){
-        if(ispunct( word_to_compare.at(i))){
-            punctuation = true;
-            break;
-        }
-    }
-
-    if(!punctuation && word.compare(word_to_compare)){
-    
-        //std::cout << word_to_compare << std::endl;
-        punctuation = false;
+    if(ispunct(*first_character)|| ispunct(*second_character)){
         
-    
-    }else if(!punctuation && !word.compare(word_to_compare)){
-        punctuation = true;
+        punctuation = true; 
     }
 
     return punctuation;     

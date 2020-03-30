@@ -12,6 +12,10 @@ Ejecutar el segundo ejemplo:
 
     make run-example2
 
+Ejecutar el código con error:
+
+    make run-error
+
 Limpiar los archivos:
 
     make clean
