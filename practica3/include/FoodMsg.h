@@ -5,9 +5,9 @@
 *
 *   Author: Sergio Jiménez
 *
-*   Date created: 07-04-2020
+*   Date created: 18-04-2020
 *
-*   Porpuse: Librería en la que se define los diferentes métodos de la clase Client
+*   Porpuse: Librería en la que se define los diferentes métodos de la clase FoodMsg
 *
 *   Revision History: Reflejado en el repositorio de GitHub
 |*********************************************/
@@ -18,28 +18,22 @@
 #include <vector>
 
 
-#ifndef CLIENT_H 
-#define CLIENT_H
-class Client{
+#ifndef FOODMSG_H 
+#define FOODMSG_H
+class FoodMsg{
 
 private:
-    int id;
-    int num_tickets;
-    std::vector<int> seats;
-    bool pay_tickets;
-    bool pay_drink_food;
+    int id_client;
+    int n_tickets;
+
 
 public:
 
-    Client(int id); // Constructor de Clase
+    FoodMsg(int id_client); // Constructor de Clase
     int get_ID();
     int get_NumTickets();
-    bool getPayTicket();
-    bool getPayDrinkFood();
     void set_ID(int id);
     void set_NumTickets(int tickets);
-    void add_SeatNum(int ticket);
-    void setPayTicket(bool pay);
-    void setPayDrinkFood(bool pay);
+    void generate_ticket_random();
 };
 #endif

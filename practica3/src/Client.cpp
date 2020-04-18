@@ -17,20 +17,36 @@
 #include "../include/Client.h"
 #include "../include/colours.h"
 #include <iostream>
-
+#include <vector>
 Client::Client(int id){
 
-    this->id = id;    
+    this->id = id;
+        
 }
 int Client::get_ID(){
     return this->id;
 }
-int Client::get_Tickets(){
-    return this->tickets;
+int Client::get_NumTickets(){
+    return this->num_tickets;
+}
+bool Client::getPayTicket(){
+    return this->pay_tickets;
+}
+bool Client::getPayDrinkFood(){
+    this->pay_drink_food;
 }
 void Client::set_ID(int id){
     this->id=id;
 }
-void Client::set_Tickets(int tickets){
-    this->tickets = tickets;
+void Client::set_NumTickets(int tickets){
+    this->num_tickets = tickets;
+}
+void Client::add_SeatNum(int ticket){
+    this->seats.push_back(ticket);
+}
+void Client::setPayTicket(bool pay){
+    this->pay_tickets = pay;
+}
+void Client::setPayDrinkFood(bool pay){
+    this->pay_drink_food = pay;
 }
