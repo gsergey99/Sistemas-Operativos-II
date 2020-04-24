@@ -2,34 +2,38 @@ DIROBJ := obj/
 DIREXE := exec/
 DIRHEA := include/
 DIRSRC := src/
-DIRBOOKS:= books/
 
 CFLAGS := -I$(DIRHEA) -c -pthread -std=c++11
 CC := g++
 
-all : dirs LineaResultado SSOOIIGLE main
+all : dirs Food_DrinkMsg SemCounter TicketMsg ventas_online main
 
 dirs:
 	mkdir -p $(DIROBJ) $(DIREXE)
 
-LineaResultado:
-	$(CC) -o $(DIROBJ)LineaResultado.o $(DIRSRC)LineaResultado.cpp $(CFLAGS)
+Food_DrinkMsg:
+	$(CC) -o $(DIROBJ)Food_DrinkMsg.o $(DIRSRC)Food_DrinkMsg.cpp $(CFLAGS)
 
-SSOOIIGLE: 
-	$(CC) -o $(DIROBJ)SSOOIIGLE.o $(DIRSRC)SSOOIIGLE.cpp $(CFLAGS)
+SemCounter: 
+	$(CC) -o $(DIROBJ)SemCounter.o $(DIRSRC)SemCounter.cpp $(CFLAGS)
+
+TicketMsg: 
+	$(CC) -o $(DIROBJ)TicketMsg.o $(DIRSRC)TicketMsg.cpp $(CFLAGS)
+
+ventas_online: 
+	$(CC) -o $(DIROBJ)ventas_online.o $(DIRSRC)ventas_online.cpp $(CFLAGS)
 
 main:
-	$(CC) -o $(DIREXE)SSOOIIGLE $(DIROBJ)SSOOIIGLE.o $(DIROBJ)LineaResultado.o -pthread -std=c++11
+	$(CC) -o $(DIREXE)ventas_online $(DIROBJ)ventas_online.o $(DIROBJ)Food_DrinkMsg.o $(DIROBJ)TicketMsg.o $(DIROBJ)SemCounter.o -pthread -std=c++11
 
 run-example1:
-	./$(DIREXE)SSOOIIGLE $(DIRBOOKS)17\ LEYES\ DEL\ TRABAJO\ EN\ EQUIPO.txt presidente 67
+	./$(DIREXE)ventas_online 7
 
 run-example2:
-	./$(DIREXE)SSOOIIGLE $(DIRBOOKS)VIVE\ TU\ SUEÑO\ -\ JOHN\ MAXWELL.txt entrenador 9
+	./$(DIREXE)ventas_online 30
 
 run-error:
-	./$(DIREXE)SSOOIIGLE $(DIRBOOKS)VIVE\ TU\ SUEÑO\ -\ JOHN\ MAXWELL.txt entrenador 9 dfd
-
+	./$(DIREXE)ventas_online error
 
 clean : 
 	rm -rf *~ core $(DIROBJ) $(DIREXE) $(DIRHEA)*~ $(DIRSRC)*~ 
