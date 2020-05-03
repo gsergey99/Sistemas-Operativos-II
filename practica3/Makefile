@@ -6,7 +6,7 @@ DIRSRC := src/
 CFLAGS := -I$(DIRHEA) -c -pthread -std=c++11
 CC := g++
 
-all : dirs Food_DrinkMsg SemCounter TicketMsg ventas_online main
+all : dirs Food_DrinkMsg SemCounter TicketMsg PayMsg ventas_online main
 
 dirs:
 	mkdir -p $(DIROBJ) $(DIREXE)
@@ -20,11 +20,14 @@ SemCounter:
 TicketMsg: 
 	$(CC) -o $(DIROBJ)TicketMsg.o $(DIRSRC)TicketMsg.cpp $(CFLAGS)
 
+PayMsg: 
+	$(CC) -o $(DIROBJ)PayMsg.o $(DIRSRC)PayMsg.cpp $(CFLAGS)
+
 ventas_online: 
 	$(CC) -o $(DIROBJ)ventas_online.o $(DIRSRC)ventas_online.cpp $(CFLAGS)
 
 main:
-	$(CC) -o $(DIREXE)ventas_online $(DIROBJ)ventas_online.o $(DIROBJ)Food_DrinkMsg.o $(DIROBJ)TicketMsg.o $(DIROBJ)SemCounter.o -pthread -std=c++11
+	$(CC) -o $(DIREXE)ventas_online $(DIROBJ)ventas_online.o $(DIROBJ)Food_DrinkMsg.o $(DIROBJ)TicketMsg.o $(DIROBJ)SemCounter.o $(DIROBJ)PayMsg.o -pthread -std=c++11
 
 run-example1:
 	./$(DIREXE)ventas_online 7
