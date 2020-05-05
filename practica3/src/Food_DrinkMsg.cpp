@@ -22,7 +22,6 @@ Food_DrinkMsg::Food_DrinkMsg(int id_clients){
 
     this->id_client = id_clients;
     
-        
 }
 int Food_DrinkMsg::get_ID(){
     return this->id_client;

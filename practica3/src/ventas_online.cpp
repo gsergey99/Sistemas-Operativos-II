@@ -61,8 +61,7 @@ std::mutex mutex_payment;
 std::mutex mutex_payment_ticket;
 std::mutex mutex_payment_f_d;
 
-
-
+/*Semáforos para la taquilla y para los puestos de comida*/
 std::mutex s_ticket_sale;
 std::mutex s_ticket_request;
 std::mutex s_wait_tickets;
@@ -70,16 +69,20 @@ std::mutex s_manager;
 std::mutex s_request_tickets;
 std::mutex s_client_food_drink;
 std::mutex s_assign_food_drink;
+std::mutex s_access_map;
+std::mutex s_assign_shit_stall;
 
 /*Variables de condición*/
 std::condition_variable cv_shift_ticket;
 std::condition_variable cv_shift_snack_stall;
 
+/*Colas de hilos para los distintos tipos de servicios*/
 std::vector<std::thread> queue_client_request;/*Cola de espera de entrada al cine de cada uno de los clientes*/
 std::vector<std::thread> g_snack_stall; /*Cola donde se guarda los hilos de los puestos de comidas*/
 std::vector<std::thread> queue_snack_stall; /*Cola donde se mueve de la cola de tickets a la cola de puestos de comida*/
 std::vector<std::thread> clients_served;/*Cola donde incluiremos los clientes servidos*/
 
+/*Colas de solicitudes*/
 std::queue<TicketMsg> queue_tickets;/*Cola donde se almacena los peticiones de los tickets*/
 std::queue<Food_DrinkMsg>queue_food_drink;/*Cola donde se almacena las peticiones de la comida y bebida*/
 std::queue<PayMsg>queue_pay_ticket_request;/*Cola para las peticiones de pago de tickets*/
@@ -87,9 +90,9 @@ std::queue<PayMsg>queue_pay_f_d_request;/*Cola para las peticiones de pago de co
 
 std::map<int,bool> log_ticket_stall;/*Mapa para comprobar si el cliente puede continuar o no*/
 
-int shift_ticket = -1;
-int cinema[6][12];
-int num_seats = 72;
+int shift_ticket = -1; /*Turno del cliente para entrar en la taquilla*/
+int cinema[6][12]; /*Representación matricial de la sala del cine*/
+int num_seats = 72; /*Número de butacas que tiene el cine*/
 
 /*Definismos el stock que va a tener cada uno de los puestos de comida 0->Comida y 1->Bebida*/
 int stock_stalls[3][2];
@@ -117,7 +120,7 @@ int main(int argc, char *argv[]){
 
     std::thread th_stock_manager(stock_manager); /*Hilo para el reponedor*/
     
-    /*Iniciación de semáforos*/
+    /*Iniciacialización de semáforos*/
     s_manager.lock();
     s_ticket_request.lock();
     s_wait_tickets.lock();
@@ -129,9 +132,9 @@ int main(int argc, char *argv[]){
     stock_system_wait.lock();
 
 
-    std::thread th_payment_service (pay_system_with_priority);
+    std::thread th_payment_service (pay_system_with_priority);/*Sistema de pago con prioridad*/
     
-    std::thread th_ticket_sale(ticket_sale);
+    std::thread th_ticket_sale(ticket_sale);/*Taquilla*/
 
     for (int i = 1;i<=SNACK_STALL;i++){
         g_snack_stall.push_back(std::thread(snack_stall,i));
@@ -169,12 +172,13 @@ int main(int argc, char *argv[]){
     th_ticket_sale.join();
     th_payment_service.join();
     
-
+    log_ticket_stall.clear();
     return EXIT_SUCCESS;
 }
 
 void initialize_environment(int num_clients){
-    /*Inicializamos el entorno del programa*/
+    /*Función para la inicialización del entorno del programa*/
+
     for (int i = 0;i < 6; i++ ){
         for(int j = 0;j < 12; j++){
             cinema[i][j] = 0;
@@ -191,11 +195,12 @@ void initialize_environment(int num_clients){
 
 void client_request(int id_client){
     /*Simulación de las peticiones de los clientes*/
-    std::cout << FYEL("[CLIENTE ") << id_client << FYEL("] estoy en la cola...") << std::endl;
+
+    std::cout << FYEL("[CLIENTE ") << id_client << FYEL("] Estoy en la cola...") << std::endl;
     std::unique_lock<std::mutex> lk(s_ticket_sale);
     
     cv_shift_ticket.wait(lk,[id_client]{return (shift_ticket==id_client);});
-    std::cout << FGRN("[CLIENTE ") << id_client << FGRN("] es mi turno, voy a por las entradas")<<std::endl;
+    std::cout << FGRN("[CLIENTE ") << id_client << FGRN("] Es mi turno, voy a por las entradas")<<std::endl;
     lk.unlock();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -210,20 +215,22 @@ void client_request(int id_client){
     s_manager.unlock();
     
     if(log_ticket_stall[id_client]){/*Comprobamos si el cliente puede continuar o se marcha si no hay entradas*/
+        
         Food_DrinkMsg food_drink_request(id_client);
         food_drink_request.drink_food_random();
         queue_food_drink.push(food_drink_request);
 
-        cv_shift_snack_stall.notify_all();
+        cv_shift_snack_stall.notify_one();
 
     }else{
 
-        std::cout << FGRN("[CLIENTE ") << id_client << FGRN("] me voy")<<std::endl;
+        std::cout << FGRN("[CLIENTE ") << id_client << FGRN("] Me voy")<<std::endl;
     }
 }
 
 void pay_service_without_priority(){
     /*Simulación del sistema del pago*/
+
     std::cout << FYEL("[SISTEMA DE PAGO] SISTEMA DE PAGO CREADO") <<std::endl;
 
     while (true){
@@ -236,19 +243,20 @@ void pay_service_without_priority(){
 
 void ticket_sale(){
     /*Simulación de la taquilla para la venta de los tickets*/
+
     int remain_tickets;
     bool with_tickets;
     int id_site = 0;
     std::cout << FRED("[MANAGER] TAQUILLA ABIERTA") <<std::endl;
+
     while (true)
     {
-        
         s_ticket_request.lock();
 
         TicketMsg msg_ticket = queue_tickets.front();
         queue_tickets.pop();
         
-        std::cout << "[TAQUILLA]: Venta de " << msg_ticket.get_NumTickets() << " tickets a cliente "<< msg_ticket.get_ID() << "...\n";
+        std::cout << FBLU("[TAQUILLA]: Venta de ") << msg_ticket.get_NumTickets() << FBLU(" tickets a cliente ")<< msg_ticket.get_ID() << std::endl;
         s_request_tickets.lock();
 
         if(num_seats<msg_ticket.get_NumTickets()){
@@ -260,38 +268,47 @@ void ticket_sale(){
         if(remain_tickets==0 && num_seats ==0){
             
             with_tickets = false;
-            std::cout << "[TAQUILLA]: No quedan más tickets. Siguiente turno..." << std::endl;
-
+            std::cout << FBLU("[TAQUILLA]: No quedan más tickets. Siguiente turno...") << std::endl;
+            s_request_tickets.unlock();
         }else{
             
             assign_seats(msg_ticket.get_NumTickets(),msg_ticket.get_ID());
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            with_tickets =true;
+            s_request_tickets.unlock();      
 
             PayMsg msg_pay(msg_ticket.get_ID(),id_site);
             queue_pay_ticket_request.push(msg_pay);
 
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            with_tickets =true;
+
+            std::cout << FYEL("[TAQUILLA] Solicitud de pago para las entradas")<<std::endl;
             mutex_payment_ticket.lock();
             pay_system.unlock();
             /*Rendevouz con el sistema de pago*/
             pay_system_wait_ticket.lock();
             mutex_payment_ticket.unlock();
-            std::cout << FYEL("[SISTEMA DE PAGO] Cliente ")<<msg_ticket.get_ID()<< FYEL(" ha pagado las entradas ")<<num_seats<<std::endl;
 
+            std::cout << FYEL("[TAQUILLA] Cliente ")<<msg_ticket.get_ID()<< FYEL(" ha pagado las entradas ")<<num_seats<<std::endl;
+
+            s_access_map.lock();
             log_ticket_stall.insert(std::pair<int,bool>(msg_ticket.get_ID(),with_tickets));
+            s_access_map.unlock();
+
             try{
 
-                queue_snack_stall.push_back(std::move(queue_client_request.front()));/*Movemos la solicitud de clientes a la nueva cola de puesto de comida*/
+                queue_snack_stall.push_back(std::move(queue_client_request.front()));/*Movemos la solicitud de clientes a la nueva cola de espera para el puesto de comida*/
                 queue_client_request.erase(queue_client_request.begin());
 
             }catch(const std::out_of_range& out_ex){
                 
-                std::cout << FRED("[MANAGER] Hay un problema con la ocupación de los clientes en la cola de puestos de cocina") << std::endl;
+                std::cout << FRED("[MANAGER] Hay un problema con la ocupación del cliente en la cola de puestos de comida y bebidas") << std::endl;
+                exit(EXIT_FAILURE);
+            }catch(const std::exception &ex){
+                
+                std::cout << FRED("[MANAGER] Ha surgido un problema con el sistema de taquilla") << std::endl;
                 exit(EXIT_FAILURE);
             }
-            
         }
-        s_request_tickets.unlock();
 
         s_wait_tickets.unlock();
     }
@@ -299,6 +316,7 @@ void ticket_sale(){
 
 void request_information(int seat, int num_thread){
     /*Función para la impresión de la solicitud de los tickets*/
+
     std::string inf_row;
     std::string inf_column;
 
@@ -327,7 +345,7 @@ void request_information(int seat, int num_thread){
         inf_column = " derecha ";
     }
 
-    std::cout << FBLU("[CLIENTE] SOLICITUD ENTRADAS < ")<<num_thread<< FBLU(" > < ")<<seat<< FBLU(" > <")<<inf_row<<FBLU("> <") << inf_column<< FBLU(">")<<std::endl;
+    std::cout << FGRN("[CLIENTE] SOLICITUD ENTRADAS < ")<<num_thread<< FGRN(" > < ")<<seat<< FGRN(" > <")<<inf_row<<FGRN("> <") << inf_column<< FGRN(">")<<std::endl;
 
 }
 
@@ -349,20 +367,22 @@ void snack_stall (int id_snack_stall){
     while(true){
 
         cv_shift_snack_stall.wait(lock_stall,[]{return !queue_snack_stall.empty();});
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
-        s_assign_food_drink.lock();
+        s_assign_shit_stall.lock();
         Food_DrinkMsg msg_food_drink = queue_food_drink.front();
         
         std::cout << FMAG("[PUESTO DE COMIDA] ") << id_snack_stall<< FMAG(" con el cliente ")<< msg_food_drink.get_ID()<<std::endl;
-        std::cout << FBLU("[CLIENTE] SOLICITUD BEBIDAS/PALOMITAS < ")<<msg_food_drink.get_ID()<< FBLU(" > < ")<<msg_food_drink.get_NumDrinks()<< FBLU(" > < ")<<msg_food_drink.get_NumPopcorn()<<FBLU(" > ")<<std::endl;
+        std::cout << FGRN("[CLIENTE] SOLICITUD BEBIDAS/PALOMITAS < ")<<msg_food_drink.get_ID()<< FGRN(" > < ")<<msg_food_drink.get_NumDrinks()<< FGRN(" > < ")<<msg_food_drink.get_NumPopcorn()<<FGRN(" > ")<<std::endl;
 
         queue_food_drink.pop(); /*Eliminamos el primero que estaba en la cola*/
 
-        clients_served.push_back(std::move(queue_snack_stall.front()));/*Eliminamos los clientes que están siendo atendidos a la cola de clientes atendidos*/
+        s_assign_shit_stall.unlock();
+
+        std::thread client_atteded = std::move(queue_snack_stall.front());
         queue_snack_stall.erase(queue_snack_stall.begin());
-;
-        if(stock_stalls[id_snack_stall-1][0]<0 || stock_stalls[id_snack_stall-1][1]<0){
+
+        if(stock_stalls[id_snack_stall-1][0]<0 || stock_stalls[id_snack_stall-1][1]<0){/*Comprobamos si hay suficiente stock*/
             stall_run_out = id_snack_stall;
         
             mutex_stock.lock();
@@ -372,27 +392,38 @@ void snack_stall (int id_snack_stall){
             mutex_stock.unlock();
         }
         /*Decrementamos el stock del puesto de comida*/
-        stock_stalls[id_snack_stall][0] -= msg_food_drink.get_NumDrinks();
-        stock_stalls[id_snack_stall][1] -= msg_food_drink.get_NumPopcorn();
+        try{
+            s_assign_food_drink.lock();
 
-        std::this_thread::sleep_for (std::chrono::seconds(2));
+            stock_stalls[id_snack_stall][0] -= msg_food_drink.get_NumDrinks();
+            stock_stalls[id_snack_stall][1] -= msg_food_drink.get_NumPopcorn();
+
+            s_assign_food_drink.unlock();
+        }catch(std::out_of_range &out_ex){
+            
+            std::cout << FRED("[MANAGER] Hay un problema con la solicitud de bebidas y palomitas") << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
         PayMsg msg_pay(msg_food_drink.get_ID(),id_snack_stall);
         queue_pay_f_d_request.push(msg_pay);
 
-        s_assign_food_drink.unlock();
+        std::this_thread::sleep_for (std::chrono::seconds(2));
 
         lock_stall.unlock();
         
-        //std::this_thread::sleep_for (std::chrono::seconds(3));
+        std::cout << FYEL("[PUESTO DE COMIDA] Solicitud de pago de bebidas y palomitas")<<std::endl;
         mutex_payment_f_d.lock();
         pay_system.unlock();
         /*Rendevouz con sistema de pago*/
         pay_system_wait_f_d.lock();
         mutex_payment_f_d.unlock();
-        std::cout << FMAG("[PUESTO DE COMIDA] Cliente ")<<msg_food_drink.get_ID()<< FMAG(" ha pagado la comida")<<std::endl;
-
-        lock_stall.lock();
+        std::cout << FYEL("[PUESTO DE COMIDA] Cliente ")<<msg_food_drink.get_ID()<< FYEL(" ha pagado la bebida y las palomitas")<<std::endl;
         
+        clients_served.push_back(std::move(client_atteded));/*Eliminamos los clientes que están siendo atendidos a la cola de clientes atendidos*/
+        std::cout << FGRN("[CLIENTE ") << msg_food_drink.get_ID() << FGRN("] ¡¡DIRECTO AL CINE!!")<<std::endl;
+        
+        lock_stall.lock();
     }
 }
 
@@ -410,14 +441,18 @@ void stock_manager(){
             stock_stalls[stall_run_out][1] = MAX_FOOD;
 
             std::this_thread::sleep_for(std::chrono::milliseconds(700));
-            std::cout << FCYN("[REPONEDOR] el cliente puede seguir comprando el puesto ")<<std::endl;
+            std::cout << FCYN("[REPONEDOR] el cliente puede seguir comprando el puesto")<<std::endl;
 
             stock_system_wait.unlock();
         }catch(const std::out_of_range& out_ex){
                 
             std::cout << FRED("[REPONEDOR] Hay un problema con reponer el stock") << std::endl;
             exit(EXIT_FAILURE);
-        }     
+        }catch(const std::exception &ex){
+
+            std::cout << FRED("[REPONEDOR] Ha surgido un problema con el sistema de reponedor") << std::endl;
+            exit(EXIT_FAILURE);
+        }    
     }
 }
 
@@ -432,40 +467,36 @@ void pay_system_with_priority(){
     while (true){
 
         pay_system.lock();
-        std::cout << FYEL("[SISTEMA DE PAGO] Solicitud de pago")<<std::endl;
         random_value = generate_priority();
-        std::cout<< "Porcentage que ha salido has sido "<< random_value<< std::endl;
+        std::cout<< "[SISTEMA DE PAGO] Porcentage que ha salido ha sido "<< random_value<< std::endl;
 
         if (random_value>=1 && random_value<=7 && !queue_pay_ticket_request.empty()){
             
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             queue_pay_ticket_request.pop();
-            std::cout<< "LE TOCA AL DE FUERA"<< std::endl;
-            
+            std::cout<< "[SISTEMA DE PAGO] La operación ha sido realizada satisfactoriamente"<< std::endl; 
             pay_system_wait_ticket.unlock();
 
         }else if (random_value>=8 && random_value<=10 && !queue_pay_f_d_request.empty()){
             
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            std::cout<< "LE TOCA AL DE DENTRO " << queue_pay_f_d_request.front().get_ID()<<std::endl;
             queue_pay_f_d_request.pop();
-
+            std::cout<< "[SISTEMA DE PAGO] La operación ha sido realizada satisfactoriamente"<< std::endl; 
             pay_system_wait_f_d.unlock();
             
         }else if(random_value>=8 && random_value<=10 && queue_pay_f_d_request.empty()){
             
-            queue_pay_ticket_request.pop();
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
+            queue_pay_ticket_request.pop();
+            std::cout<< "[SISTEMA DE PAGO] La operación ha sido realizada satisfactoriamente"<< std::endl;
             pay_system_wait_ticket.unlock();
+
         }else if(random_value>=1 && random_value<=7 && queue_pay_ticket_request.empty()){
             
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));            
             queue_pay_f_d_request.pop();
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            
+            std::cout<< "[SISTEMA DE PAGO] La operación ha sido realizada satisfactoriamente"<< std::endl;            
             pay_system_wait_f_d.unlock();
         }
-
     }
-
 }

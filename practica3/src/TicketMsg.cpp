@@ -21,8 +21,6 @@
 TicketMsg::TicketMsg(int id_clients){
 
     this->id_client = id_clients;
-    
-        
 }
 int TicketMsg::get_ID(){
     return this->id_client;
