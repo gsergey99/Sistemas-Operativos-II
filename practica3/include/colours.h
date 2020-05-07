@@ -1,5 +1,5 @@
 /*********************************************
-*   Project: Práctica 2 de Sistemas Operativos II 
+*   Project: Práctica 3 de Sistemas Operativos II 
 *
 *   Program name: colours.h
 *

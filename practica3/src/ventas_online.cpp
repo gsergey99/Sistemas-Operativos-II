@@ -57,7 +57,6 @@ std::mutex pay_system;
 std::mutex pay_system_wait;
 std::mutex pay_system_wait_ticket;
 std::mutex pay_system_wait_f_d;
-std::mutex mutex_payment;
 std::mutex mutex_payment_ticket;
 std::mutex mutex_payment_f_d;
 
@@ -70,7 +69,7 @@ std::mutex s_request_tickets;
 std::mutex s_client_food_drink;
 std::mutex s_assign_food_drink;
 std::mutex s_access_map;
-std::mutex s_assign_shit_stall;
+std::mutex s_assign_shift_stall;
 
 /*Variables de condición*/
 std::condition_variable cv_shift_ticket;
@@ -131,7 +130,6 @@ int main(int argc, char *argv[]){
     stock_system.lock();
     stock_system_wait.lock();
 
-
     std::thread th_payment_service (pay_system_with_priority);/*Sistema de pago con prioridad*/
     
     std::thread th_ticket_sale(ticket_sale);/*Taquilla*/
@@ -141,14 +139,13 @@ int main(int argc, char *argv[]){
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     
-    for (int i =1; i<= num_clients;i++){
+    for (int i =1; i<=num_clients;i++){
         
         queue_client_request.push_back(std::thread(client_request,i));
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     
     std::unique_lock<std::mutex> lk(s_ticket_sale);
-    
     
     for(int i=1;i<=num_clients;i++){
         
@@ -164,15 +161,20 @@ int main(int argc, char *argv[]){
         
     }
     
-
-    /*Esperamos a que finalice cada uno de los clientes*/
+    /*Esperamos a que finalice cada uno de los clientes y puestos de comida*/
     for_each(queue_client_request.begin(), queue_client_request.end(),std::mem_fn(&std::thread::join));
     for_each(queue_snack_stall.begin(), queue_snack_stall.end(),std::mem_fn(&std::thread::join));
 
+    /*Esperamos a la finalización de la taquilla y del sistema de pago*/
     th_ticket_sale.join();
     th_payment_service.join();
-    
+
+    /*Liberación de recursos*/
     log_ticket_stall.clear();
+    queue_client_request.clear();
+    queue_snack_stall.clear();
+    clients_served.clear();
+
     return EXIT_SUCCESS;
 }
 
@@ -185,7 +187,7 @@ void initialize_environment(int num_clients){
         }
     }
 
-    for (int i = 0; i<3;i++){
+    for (int i = 0; i < 3; i++){
         for (int j = 0; j < 2; j++)
         {
             stock_stalls[i][j] = MAX_FOOD;
@@ -220,7 +222,7 @@ void client_request(int id_client){
         food_drink_request.drink_food_random();
         queue_food_drink.push(food_drink_request);
 
-        cv_shift_snack_stall.notify_one();
+        cv_shift_snack_stall.notify_one();/*Notificamos al puesto de comida que esté libre*/
 
     }else{
 
@@ -265,7 +267,7 @@ void ticket_sale(){
 
         remain_tickets = num_seats - msg_ticket.get_NumTickets();
 
-        if(remain_tickets==0 && num_seats ==0){
+        if(remain_tickets==0 && num_seats==0){
             
             with_tickets = false;
             std::cout << FBLU("[TAQUILLA]: No quedan más tickets. Siguiente turno...") << std::endl;
@@ -273,13 +275,14 @@ void ticket_sale(){
         }else{
             
             assign_seats(msg_ticket.get_NumTickets(),msg_ticket.get_ID());
+            with_tickets =true;
+            
             s_request_tickets.unlock();      
 
             PayMsg msg_pay(msg_ticket.get_ID(),id_site);
             queue_pay_ticket_request.push(msg_pay);
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            with_tickets =true;
 
             std::cout << FYEL("[TAQUILLA] Solicitud de pago para las entradas")<<std::endl;
             mutex_payment_ticket.lock();
@@ -289,10 +292,6 @@ void ticket_sale(){
             mutex_payment_ticket.unlock();
 
             std::cout << FYEL("[TAQUILLA] Cliente ")<<msg_ticket.get_ID()<< FYEL(" ha pagado las entradas ")<<num_seats<<std::endl;
-
-            s_access_map.lock();
-            log_ticket_stall.insert(std::pair<int,bool>(msg_ticket.get_ID(),with_tickets));
-            s_access_map.unlock();
 
             try{
 
@@ -309,6 +308,10 @@ void ticket_sale(){
                 exit(EXIT_FAILURE);
             }
         }
+        /*Acceso exclusivo de la respuesta de la taquilla*/
+        s_access_map.lock();
+        log_ticket_stall.insert(std::pair<int,bool>(msg_ticket.get_ID(),with_tickets));
+        s_access_map.unlock();
 
         s_wait_tickets.unlock();
     }
@@ -369,7 +372,7 @@ void snack_stall (int id_snack_stall){
         cv_shift_snack_stall.wait(lock_stall,[]{return !queue_snack_stall.empty();});
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
-        s_assign_shit_stall.lock();
+        s_assign_shift_stall.lock();
         Food_DrinkMsg msg_food_drink = queue_food_drink.front();
         
         std::cout << FMAG("[PUESTO DE COMIDA] ") << id_snack_stall<< FMAG(" con el cliente ")<< msg_food_drink.get_ID()<<std::endl;
@@ -377,12 +380,12 @@ void snack_stall (int id_snack_stall){
 
         queue_food_drink.pop(); /*Eliminamos el primero que estaba en la cola*/
 
-        s_assign_shit_stall.unlock();
+        s_assign_shift_stall.unlock();
 
         std::thread client_atteded = std::move(queue_snack_stall.front());
         queue_snack_stall.erase(queue_snack_stall.begin());
 
-        if(stock_stalls[id_snack_stall-1][0]<0 || stock_stalls[id_snack_stall-1][1]<0){/*Comprobamos si hay suficiente stock*/
+        if(stock_stalls[id_snack_stall-1][0]<msg_food_drink.get_NumDrinks() || stock_stalls[id_snack_stall-1][1]<msg_food_drink.get_NumPopcorn()){/*Comprobamos si hay suficiente stock*/
             stall_run_out = id_snack_stall;
         
             mutex_stock.lock();
@@ -395,11 +398,11 @@ void snack_stall (int id_snack_stall){
         try{
             s_assign_food_drink.lock();
 
-            stock_stalls[id_snack_stall][0] -= msg_food_drink.get_NumDrinks();
-            stock_stalls[id_snack_stall][1] -= msg_food_drink.get_NumPopcorn();
+            stock_stalls[id_snack_stall-1][0] -= msg_food_drink.get_NumDrinks();
+            stock_stalls[id_snack_stall-1][1] -= msg_food_drink.get_NumPopcorn();
 
             s_assign_food_drink.unlock();
-        }catch(std::out_of_range &out_ex){
+        }catch(std::exception &ex){
             
             std::cout << FRED("[MANAGER] Hay un problema con la solicitud de bebidas y palomitas") << std::endl;
             exit(EXIT_FAILURE);
@@ -437,8 +440,8 @@ void stock_manager(){
 
             std::cout << FCYN("[REPONEDOR] reabasteciendo puesto ")<< stall_run_out<<std::endl;
 
-            stock_stalls[stall_run_out][0] = MAX_FOOD;
-            stock_stalls[stall_run_out][1] = MAX_FOOD;
+            stock_stalls[stall_run_out-1][0] = MAX_FOOD;
+            stock_stalls[stall_run_out-1][1] = MAX_FOOD;
 
             std::this_thread::sleep_for(std::chrono::milliseconds(700));
             std::cout << FCYN("[REPONEDOR] el cliente puede seguir comprando el puesto")<<std::endl;
@@ -446,7 +449,7 @@ void stock_manager(){
             stock_system_wait.unlock();
         }catch(const std::out_of_range& out_ex){
                 
-            std::cout << FRED("[REPONEDOR] Hay un problema con reponer el stock") << std::endl;
+            std::cout << FRED("[REPONEDOR] Hay un problema con el reponedor de stock") << std::endl;
             exit(EXIT_FAILURE);
         }catch(const std::exception &ex){
 
@@ -468,7 +471,6 @@ void pay_system_with_priority(){
 
         pay_system.lock();
         random_value = generate_priority();
-        std::cout<< "[SISTEMA DE PAGO] Porcentage que ha salido ha sido "<< random_value<< std::endl;
 
         if (random_value>=1 && random_value<=7 && !queue_pay_ticket_request.empty()){
             
